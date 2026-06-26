@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>写作研究</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "PingFang SC", "Microsoft YaHei", Georgia, serif;
+           background: #f5f5f0; color: #1a1a1a; }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* ── 设置页 ── */
+    #setup { max-width: 460px; margin: 80px auto; background: #fff;
+             padding: 40px; border-radius: 10px; box-shadow: 0 2px 16px rgba(0,0,0,.09); }
+    #setup h1 { font-size: 1.3rem; margin-bottom: 8px; }
+    #setup p  { font-size: 0.88rem; color: #666; margin-bottom: 28px; line-height: 1.6; }
+    #setup label { display: block; font-size: 0.82rem; color: #555;
+                   margin-bottom: 4px; margin-top: 18px; }
+    #setup input { width: 100%; padding: 9px 11px; border: 1px solid #ccc;
+                   border-radius: 5px; font-size: 0.95rem; }
+    #setup button { margin-top: 28px; width: 100%; padding: 12px;
+                    background: #1a1a1a; color: #fff; border: none;
+                    border-radius: 5px; cursor: pointer; font-size: 1rem; }
+    #setup button:hover { background: #333; }
+    #setup .err { color: #c0392b; font-size: 0.82rem; margin-top: 10px; }
+
+    /* ── 说明页 ── */
+    #instructions { max-width: 600px; margin: 60px auto; background: #fff;
+                    padding: 40px; border-radius: 10px; box-shadow: 0 2px 16px rgba(0,0,0,.09); }
+    #instructions h2 { font-size: 1.2rem; margin-bottom: 16px; }
+    #instructions ol { padding-left: 22px; line-height: 2.0; font-size: 0.95rem; color: #333; }
+    #instructions .prompt-box { background: #f8f8f2; border-left: 3px solid #999;
+                                 padding: 16px 20px; margin: 24px 0; line-height: 1.7;
+                                 border-radius: 0 5px 5px 0; color: #333; }
+    #instructions .prompt-label { font-size: 0.78rem; color: #999; margin-bottom: 6px; }
+    #instructions button { margin-top: 24px; padding: 11px 32px;
+                           background: #1a1a1a; color: #fff; border: none;
+                           border-radius: 5px; cursor: pointer; font-size: 0.95rem; }
+
+    /* ── 写作页 ── */
+    #writing { max-width: 740px; margin: 32px auto; padding: 0 16px; }
+    #toolbar { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
+    #toolbar button { padding: 8px 20px; border: 1px solid #ccc; border-radius: 5px;
+                      background: #fff; cursor: pointer; font-size: 0.88rem; transition: background .15s; }
+    #toolbar button:hover:not(:disabled) { background: #f0f0f0; }
+    #toolbar button:disabled { opacity: 0.4; cursor: default; }
+    #toolbar #status { margin-left: auto; font-size: 0.78rem; color: #888; min-width: 120px; text-align: right; }
+    #editor-mount { background: #fff; border: 1px solid #ddd; border-radius: 8px;
+                    min-height: 360px; padding: 28px 32px; font-size: 1.05rem; line-height: 1.85; }
+    .ProseMirror { outline: none; }
+    .ProseMirror p { margin-bottom: 0.6em; }
+    .ProseMirror p:first-child { margin-top: 0; }
+    /* AI provenance mark is NOT shown during writing — removed to preserve natural detection baseline */
+    span[data-src="AI"] { /* no visual style */ }
+    #hint { display: none; }
+    #word-count { margin-top: 5px; font-size: 0.78rem; color: #aaa; }
+    #error-msg { margin-top: 8px; font-size: 0.82rem; color: #c0392b; min-height: 1.2em; }
+
+    /* ── 评分页 ── */
+    #rating { max-width: 680px; margin: 40px auto; padding: 0 16px; }
+    #rating .header { background: #fff; padding: 28px 32px 20px; border-radius: 10px 10px 0 0;
+                      border: 1px solid #e0e0e0; border-bottom: none; }
+    #rating h2 { font-size: 1.15rem; margin-bottom: 6px; }
+    #rating .sub { font-size: 0.87rem; color: #666; line-height: 1.6; }
+    #sentence-cards { background: #fff; border: 1px solid #e0e0e0; border-top: none;
+                      border-radius: 0 0 10px 10px; padding: 16px 24px 24px; }
+    .sent-card { border: 1px solid #ececec; border-radius: 6px; padding: 16px 18px;
+                 margin-bottom: 12px; }
+    .sent-card .sent-text { font-size: 0.95rem; line-height: 1.65; margin-bottom: 12px;
+                             color: #222; }
+    .sent-card .choices { display: flex; gap: 16px; flex-wrap: wrap; }
+    .sent-card .choices label { display: flex; align-items: center; gap: 6px;
+                                 font-size: 0.88rem; cursor: pointer; color: #444; }
+    .sent-card .choices input[type="radio"] { cursor: pointer; }
+    .sent-card .confidence { margin-top: 10px; font-size: 0.78rem; color: #999; }
+    .sent-card .confidence label { display: inline; margin-right: 4px; }
+    .sent-card .confidence select { font-size: 0.78rem; border: 1px solid #ddd;
+                                     border-radius: 3px; padding: 2px 6px; color: #555; }
+    #submit-rating { margin-top: 20px; padding: 11px 36px;
+                     background: #1a1a1a; color: #fff; border: none;
+                     border-radius: 5px; cursor: pointer; font-size: 0.95rem; }
+    #submit-rating:disabled { opacity: 0.5; cursor: default; }
+
+    /* ── 完成页 ── */
+    #done { max-width: 440px; margin: 130px auto; text-align: center; padding: 0 16px; }
+    #done h2 { font-size: 1.5rem; margin-bottom: 14px; }
+    #done p  { color: #555; font-size: 0.93rem; line-height: 1.75; }
+    #done .code { font-size: 1.3rem; font-weight: bold; letter-spacing: .12em;
+                  background: #f0f0e8; padding: 12px 24px; border-radius: 6px;
+                  display: inline-block; margin: 18px 0; }
+  </style>
+</head>
+<body>
+
+<!-- 第一屏：设置 -->
+<div id="setup" class="screen active">
+  <h1>写作研究</h1>
+  <p>感谢参与本次研究。全程约 20–30 分钟。</p>
+  <label>回响数据用户 ID</label>
+  <input id="prolific-id" type="text" placeholder="请粘贴你的用户 ID" autocomplete="off" />
+  <p style="font-size:0.78rem;color:#999;margin-top:6px;">ID 仅用于审核数据匹配身份和发放报酬，不会与其他信息关联。</p>
+  <div id="setup-err" class="err"></div>
+  <button id="start-btn">开始 →</button>
+</div>
+
+<!-- 第二屏：任务说明 -->
+<div id="instructions" class="screen">
+  <h2>任务说明</h2>
+  <ol>
+    <li>请根据下面的写作题目，写一段约 400–600 字的文章。</li>
+    <li>写作过程中，你可以点击「获取 AI 建议」按钮，AI 会给出一段续写建议。</li>
+    <li>你可以选择采纳、修改或忽略 AI 的建议，完全由你决定。</li>
+    <li>请尽量自然地写作，不需要特意多用或少用 AI。</li>
+    <li>写完后点击「完成写作」，会有几个简短的问题。</li>
+  </ol>
+  <div class="prompt-box">
+    <div class="prompt-label">写作题目</div>
+    请描述一次你改变了某个重要想法或观点的经历。你原来是怎么想的？是什么让你重新考虑？你现在又是怎么看这件事的？
+  </div>
+  <button id="begin-writing-btn">开始写作 →</button>
+</div>
+
+<!-- 第三屏：写作 -->
+<div id="writing" class="screen">
+  <div id="toolbar">
+    <button id="suggest-btn">💡 获取 AI 建议</button>
+    <button id="done-writing-btn">✅ 完成写作</button>
+    <span id="status"></span>
+  </div>
+  <div id="editor-mount"></div>
+  <div id="hint">AI 建议的文字以<span style="background:#fff3cd;border-bottom:2px solid #f0ad4e;padding:0 3px">黄色</span>高亮显示。对高亮文字进行修改后，高亮会消失。</div>
+  <div id="word-count">字数：0</div>
+  <div id="error-msg"></div>
+</div>
+
+<!-- 第四屏：逐句评分 -->
+<div id="rating" class="screen">
+  <div class="header">
+    <h2>关于你的文章，请回答几个问题</h2>
+    <p class="sub">
+      请逐句判断：这个句子的<strong>最终版本</strong>中，是否保留了 AI 建议中的文字？
+      哪怕只有一个词，也算"有"。
+    </p>
+  </div>
+  <div id="sentence-cards"></div>
+  <button id="submit-rating">提交 →</button>
+</div>
+
+<!-- 第五屏：心理所有权量表 -->
+<div id="ownership" class="screen">
+  <div style="max-width:620px;margin:40px auto;padding:0 16px;">
+    <div style="background:#fff;padding:28px 32px;border-radius:10px;border:1px solid #e0e0e0;">
+      <h2 style="font-size:1.15rem;margin-bottom:8px;">关于这篇文章</h2>
+      <p style="font-size:0.87rem;color:#666;margin-bottom:24px;line-height:1.6;">
+        请根据你对<strong>整篇文章</strong>的感受作答（1 = 完全不同意，7 = 完全同意）。
+      </p>
+      <div id="ownership-items"></div>
+      <button id="submit-ownership" style="margin-top:20px;padding:11px 36px;
+        background:#1a1a1a;color:#fff;border:none;border-radius:5px;
+        cursor:pointer;font-size:0.95rem;">提交 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- 第六屏：完成 -->
+<div id="done" class="screen">
+  <h2>感谢你的参与！</h2>
+  <p>你的回答已保存。<br>请将以下完成码告知研究人员：</p>
+  <div class="code" id="completion-code">—</div>
+  <p>现在可以关闭此页面。</p>
+</div>
+
+<script type="module">
+  import { initEditor, requestSuggestion, exportLog, submitLog } from "./src/editor.js";
+  import { segmentSentences } from "./src/provenance.js";
+
+  function show(id) {
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+    window.scrollTo(0, 0);
+  }
+
+  function setError(msg) {
+    document.getElementById("error-msg").textContent = msg;
+  }
+
+  // 自动生成参与者 ID，从 URL 读取任务 ID
+  function generateId() {
+    return "P-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7);
+  }
+  function getTaskId() {
+    return new URLSearchParams(window.location.search).get("task") || "task1";
+  }
+
+  // 第一屏 → 第二屏
+  document.getElementById("start-btn").addEventListener("click", () => {
+    const prolificId = document.getElementById("prolific-id").value.trim();
+    const err = document.getElementById("setup-err");
+    if (!prolificId) { err.textContent = "请填写回响数据用户 ID。"; return; }
+    err.textContent = "";
+    window._studyConfig = { participantId: generateId(), taskId: getTaskId(), prolificId };
+    show("instructions");
+  });
+
+  // 第二屏 → 第三屏
+  document.getElementById("begin-writing-btn").addEventListener("click", () => {
+    const { participantId, taskId } = window._studyConfig;
+    const view = initEditor(document.getElementById("editor-mount"),
+                            { participantId, taskId, apiKey: null });
+    window._editorView = view;
+
+    // 字数统计
+    view.setProps({
+      dispatchTransaction(tr) {
+        const newState = view.state.apply(tr);
+        view.updateState(newState);
+        let chars = 0;
+        newState.doc.descendants(n => {
+          if (n.isText) chars += n.text.replace(/\s/g, "").length;
+        });
+        document.getElementById("word-count").textContent = `字数：${chars}`;
+      }
+    });
+
+    show("writing");
+  });
+
+  // AI 建议
+  document.getElementById("suggest-btn").addEventListener("click", async () => {
+    const btn = document.getElementById("suggest-btn");
+    const status = document.getElementById("status");
+    setError("");
+    btn.disabled = true;
+    status.textContent = "正在请求 AI 建议…";
+    try {
+      await requestSuggestion();
+      status.textContent = "建议已插入";
+    } catch (e) {
+      setError("AI 建议请求失败：" + (e.message || "网络错误，请重试"));
+      status.textContent = "";
+    }
+    btn.disabled = false;
+    setTimeout(() => { status.textContent = ""; }, 3000);
+  });
+
+  // 第三屏 → 第四屏
+  document.getElementById("done-writing-btn").addEventListener("click", () => {
+    const view = window._editorView;
+    let text = "";
+    view.state.doc.descendants(n => { if (n.isText) text += n.text; });
+    if (text.replace(/\s/g, "").length < 50) {
+      setError("请先写一些内容再提交。"); return;
+    }
+    setError("");
+
+    const sentences = segmentSentences(view.state.doc);
+    window._sentences = sentences;
+
+    const cards = document.getElementById("sentence-cards");
+    cards.innerHTML = "";
+    sentences.forEach((s, i) => {
+      if (!s.text.trim()) return;
+      const card = document.createElement("div");
+      card.className = "sent-card";
+      card.innerHTML = `
+        <div class="sent-text">${escapeHtml(s.text)}</div>
+        <div class="choices">
+          <label><input type="radio" name="s${i}" value="AI" required>
+            有</label>
+          <label><input type="radio" name="s${i}" value="HUMAN">
+            没有</label>
+        </div>
+        <div class="confidence">
+          置信度（可选）：
+          <select name="c${i}">
+            <option value="">—</option>
+            <option value="1">1 完全猜测</option>
+            <option value="2">2 不太确定</option>
+            <option value="3">3 比较确定</option>
+            <option value="4">4 非常确定</option>
+          </select>
+        </div>`;
+      cards.appendChild(card);
+    });
+    show("rating");
+  });
+
+  // 第四屏 → 第五屏：收集评分，保存数据
+  document.getElementById("submit-rating").addEventListener("click", async () => {
+    const sentences = window._sentences;
+    const ratings = [];
+    let allAnswered = true;
+
+    sentences.forEach((s, i) => {
+      if (!s.text.trim()) return;
+      const sel = document.querySelector(`input[name="s${i}"]:checked`);
+      if (!sel) { allAnswered = false; return; }
+      const conf = document.querySelector(`select[name="c${i}"]`);
+      ratings.push({
+        sentence_index: i,
+        participant_response: sel.value,
+        confidence: conf?.value ? parseInt(conf.value) : null,
+      });
+    });
+
+    if (!allAnswered) {
+      alert("请回答所有句子的问题后再提交。"); return;
+    }
+
+    // 暂存评分，跳转到所有权量表
+    window._pendingRatings = ratings;
+
+    // 生成所有权量表
+    const OWNERSHIP_ITEMS = [
+      "这篇文章感觉是属于我的。",
+      "我对这篇文章有强烈的归属感。",
+      "我觉得这篇文章是我自己的作品。",
+      "这篇文章体现了我自己的想法和表达方式。",
+    ];
+    const container = document.getElementById("ownership-items");
+    container.innerHTML = "";
+    OWNERSHIP_ITEMS.forEach((q, i) => {
+      const row = document.createElement("div");
+      row.style.cssText = "margin-bottom:18px;";
+      row.innerHTML = `
+        <div style="font-size:0.92rem;margin-bottom:8px;color:#222;">${i+1}. ${q}</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span style="font-size:0.75rem;color:#999;">完全不同意</span>
+          ${[1,2,3,4,5,6,7].map(v => `
+            <label style="display:flex;flex-direction:column;align-items:center;gap:3px;
+                          font-size:0.75rem;color:#666;cursor:pointer;">
+              <input type="radio" name="o${i}" value="${v}" required>
+              ${v}
+            </label>`).join("")}
+          <span style="font-size:0.75rem;color:#999;">完全同意</span>
+        </div>`;
+      container.appendChild(row);
+    });
+
+    show("ownership");
+  });
+
+  // 第五屏 → 第六屏：提交所有权量表 + 全部数据
+  document.getElementById("submit-ownership").addEventListener("click", async () => {
+    const NITEMS = 4;
+    const ownership = [];
+    let allAnswered = true;
+    for (let i = 0; i < NITEMS; i++) {
+      const sel = document.querySelector(`input[name="o${i}"]:checked`);
+      if (!sel) { allAnswered = false; break; }
+      ownership.push({ item: i, score: parseInt(sel.value) });
+    }
+    if (!allAnswered) { alert("请回答所有题目。"); return; }
+
+    const btn = document.getElementById("submit-ownership");
+    btn.disabled = true;
+    btn.textContent = "保存中…";
+
+    const result = await submitLog(window._pendingRatings, ownership);
+    if (!result.ok) {
+      btn.disabled = false;
+      btn.textContent = "提交 →";
+      alert("保存失败，请告知研究人员：" + JSON.stringify(result.error));
+      return;
+    }
+
+    const code = window._studyConfig.participantId.toUpperCase() +
+                 "-" + new Date().toISOString().slice(0,10).replace(/-/g,"");
+    document.getElementById("completion-code").textContent = code;
+    show("done");
+  });
+
+  function escapeHtml(str) {
+    return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+</script>
+</body>
+</html>

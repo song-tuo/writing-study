@@ -1,0 +1,26 @@
+{
+  "name": "provenance-editor",
+  "type": "module",
+  "version": "0.1.0",
+  "description": "Instrumented writing editor with token-level AI/HUMAN provenance tracking",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "node src/provenance.test.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.108.2",
+    "prosemirror-commands": "^1.5.2",
+    "prosemirror-history": "^1.3.2",
+    "prosemirror-inputrules": "^1.4.0",
+    "prosemirror-keymap": "^1.2.2",
+    "prosemirror-model": "^1.19.4",
+    "prosemirror-schema-basic": "^1.2.2",
+    "prosemirror-state": "^1.4.3",
+    "prosemirror-transform": "^1.8.0",
+    "prosemirror-view": "^1.32.4"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
