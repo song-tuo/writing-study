@@ -112,6 +112,7 @@
   <ol>
     <li>请根据下面的写作题目，写一段至少 10 个句子的文章（约 400–600 字）。</li>
     <li>写作过程中，你可以点击「获取 AI 建议」按钮，AI 会给出一段续写建议。</li>
+    <li><strong>请至少使用一次 AI 建议</strong>，这是本研究的必要步骤。</li>
     <li>你可以选择采纳、修改或忽略 AI 的建议，完全由你决定。</li>
     <li>请尽量自然地写作，不需要特意多用或少用 AI。</li>
     <li>写完后点击「完成写作」，会有几个简短的问题。</li>
@@ -267,6 +268,10 @@
     }
 
     window._studyConfig.writing_duration_seconds = Math.round((Date.now() - window._writingStartTime) / 1000);
+
+    if (suggestionsLeft === 3) {
+      setError("请至少使用一次 AI 建议后再提交（点击「💡 获取 AI 建议」按钮）。"); return;
+    }
     setError("");
 
     const sentences = segmentSentences(view.state.doc);
