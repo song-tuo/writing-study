@@ -257,6 +257,10 @@
     setError("");
 
     const sentences = segmentSentences(view.state.doc);
+    const completeSentences = sentences.filter(s => s.text.trim() && !s.incomplete);
+    if (completeSentences.length < 8) {
+      setError(`请至少写 8 个完整句子（当前：${completeSentences.length} 句）。`); return;
+    }
     window._sentences = sentences;
 
     const cards = document.getElementById("sentence-cards");

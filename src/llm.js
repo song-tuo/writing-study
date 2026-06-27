@@ -8,10 +8,11 @@ const LLM_CONFIG = {
   model: "deepseek-chat",
   api_url: "https://api.deepseek.com/chat/completions",
   temperature: 0.7,
-  max_tokens: 200,
+  max_tokens: 60,
   system_prompt:
     "你是一个写作助手。请根据用户提供的文字，给出自然流畅的续写建议。" +
-    "保持用户的语气和风格。只返回建议的文字，不要解释。",
+    "保持用户的语气和风格。只返回建议的文字，不要解释。" +
+    "建议必须简短，不超过30个汉字。",
 };
 
 /**
