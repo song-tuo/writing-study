@@ -269,9 +269,6 @@
 
     window._studyConfig.writing_duration_seconds = Math.round((Date.now() - window._writingStartTime) / 1000);
 
-    if (suggestionsLeft === 3) {
-      setError("请至少使用一次 AI 建议后再提交（点击「💡 获取 AI 建议」按钮）。"); return;
-    }
     setError("");
 
     const sentences = segmentSentences(view.state.doc);
