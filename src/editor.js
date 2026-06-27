@@ -64,6 +64,11 @@ export async function requestSuggestion() {
   });
   context = context.slice(-300);
 
+  if (context.replace(/\s/g, "").length < 20) {
+    suggestionPending = false;
+    throw new Error("请先写一些内容，再获取 AI 建议。");
+  }
+
   try {
     const suggestion = await fetchSuggestion(context, apiKey);
     insertAIText(view, " " + suggestion);
