@@ -17,9 +17,10 @@ export async function saveLog(log) {
     task_id:           log.task_id,
     prolific_id:       log.prolific_id ?? null,
     logged_at:         log.logged_at,
-    sentences:         log.sentences,
-    llm_model:         log.llm_model ?? null,
-    ownership_ratings: log.ownership_ratings ?? null,
+    sentences:           log.sentences,
+    llm_model:           log.llm_model ?? null,
+    participant_ratings: log.participant_ratings ?? null,
+    ownership_ratings:   log.ownership_ratings ?? null,
   });
 
   if (error) {
