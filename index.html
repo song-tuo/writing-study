@@ -126,7 +126,7 @@
 <!-- 第三屏：写作 -->
 <div id="writing" class="screen">
   <div id="toolbar">
-    <button id="suggest-btn">💡 获取 AI 建议</button>
+    <button id="suggest-btn">💡 获取 AI 建议（剩余 3 次）</button>
     <button id="done-writing-btn">✅ 完成写作</button>
     <span id="status"></span>
   </div>
@@ -228,8 +228,10 @@
     show("writing");
   });
 
-  // AI 建议
+  // AI 建议（最多 3 次）
+  let suggestionsLeft = 3;
   document.getElementById("suggest-btn").addEventListener("click", async () => {
+    if (suggestionsLeft <= 0) return;
     const btn = document.getElementById("suggest-btn");
     const status = document.getElementById("status");
     setError("");
@@ -237,12 +239,20 @@
     status.textContent = "正在请求 AI 建议…";
     try {
       await requestSuggestion();
+      suggestionsLeft--;
       status.textContent = "建议已插入";
+      if (suggestionsLeft > 0) {
+        btn.textContent = `💡 获取 AI 建议（剩余 ${suggestionsLeft} 次）`;
+        btn.disabled = false;
+      } else {
+        btn.textContent = "💡 AI 建议已用完";
+        btn.disabled = true;
+      }
     } catch (e) {
       setError("AI 建议请求失败：" + (e.message || "网络错误，请重试"));
       status.textContent = "";
+      btn.disabled = false;
     }
-    btn.disabled = false;
     setTimeout(() => { status.textContent = ""; }, 3000);
   });
 
