@@ -81,6 +81,7 @@ export function exportLog() {
   const log = buildProvenanceLog(view.state.doc, schema, participantId, taskId);
   log.llm_model = getLLMConfig().model;
   log.prolific_id = window._studyConfig?.prolificId ?? null;
+  log.writing_duration_seconds = window._studyConfig?.writing_duration_seconds ?? null;
   return log;
 }
 

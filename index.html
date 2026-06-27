@@ -225,6 +225,7 @@
       }
     });
 
+    window._writingStartTime = Date.now();
     show("writing");
   });
 
@@ -264,6 +265,8 @@
     if (text.replace(/\s/g, "").length < 50) {
       setError("请先写一些内容再提交。"); return;
     }
+
+    window._studyConfig.writing_duration_seconds = Math.round((Date.now() - window._writingStartTime) / 1000);
     setError("");
 
     const sentences = segmentSentences(view.state.doc);
