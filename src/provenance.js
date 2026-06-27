@@ -78,7 +78,7 @@ export function segmentSentences(doc) {
     if (chars.length === 0) return;
 
     const fullText = chars.map((c) => c.ch).join("");
-    const re = /[^.!?]*[.!?]+/g;
+    const re = /[^.!?。！？]*[.!?。！？]+/g;
     let match;
     let lastEnd = 0;
 
